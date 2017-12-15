@@ -1,5 +1,13 @@
 package org.jxls.common;
 
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import org.jxls.area.XlsArea;
 import org.jxls.expression.ExpressionEvaluator;
 import org.jxls.transform.TransformationConfig;
@@ -7,9 +15,7 @@ import org.jxls.transform.Transformer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import neu.Fields;
 
 /**
  * Represents an excel cell data holder and cell value evaluator
@@ -126,24 +132,32 @@ public class CellData {
 
     public Object evaluate(Context context){
         targetCellType = cellType;
-        if( cellType == CellType.STRING && cellValue != null){
-            String strValue = cellValue.toString();
-            if( isUserFormula(strValue) ){
-                String formulaStr = strValue.substring(2, strValue.length()-1);
-                evaluate(formulaStr, context);
-                if( evaluationResult != null ){
-                    targetCellType = CellType.FORMULA;
-                    formula = evaluationResult.toString();
-                }
-            }else{
-                evaluate(strValue, context);
-            }
-            if(evaluationResult == null){
-                targetCellType = CellType.BLANK;
-            }
-        }
-        return evaluationResult;
+        Fields fields = (Fields) context.getVar(Fields.NAME);
+        if (fields != null) {
+			String strValue = fields.pop();
+			evaluate2(strValue, context);
+        } else if (cellType == CellType.STRING && cellValue != null) {
+			String strValue = cellValue.toString();
+			evaluate2(strValue, context);
+		}
+		return evaluationResult;
     }
+
+	private void evaluate2(String strValue, Context context) {
+		if (isUserFormula(strValue)) {
+			String formulaStr = strValue.substring(2, strValue.length() - 1);
+			evaluate(formulaStr, context);
+			if (evaluationResult != null) {
+				targetCellType = CellType.FORMULA;
+				formula = evaluationResult.toString();
+			}
+		} else {
+			evaluate(strValue, context);
+		}
+		if (evaluationResult == null) {
+			targetCellType = CellType.BLANK;
+		}
+	}
 
     private ExpressionEvaluator getExpressionEvaluator(){
         return transformer.getTransformationConfig().getExpressionEvaluator();

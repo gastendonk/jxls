@@ -1,16 +1,17 @@
 package org.jxls.transform;
 
-import org.jxls.common.CellData;
-import org.jxls.common.CellRef;
-import org.jxls.common.RowData;
-import org.jxls.common.SheetData;
-
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import org.jxls.common.CellData;
+import org.jxls.common.CellRef;
+import org.jxls.common.RowData;
+import org.jxls.common.SheetData;
+import org.jxls.common.Size;
 
 /**
  * Base transformer class providing basic implementation for some of the {@link Transformer} interface methods
@@ -32,6 +33,10 @@ public abstract class AbstractTransformer implements Transformer {
         } else {
             return new ArrayList<CellRef>();
         }
+    }
+    
+    @Override
+    public void adjustTableSize(CellRef ref, Size size) {
     }
 
     public void resetTargetCellRefs() {

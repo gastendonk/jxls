@@ -3,6 +3,7 @@ package org.jxls.command;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+
 import org.jxls.area.Area;
 import org.jxls.common.CellRef;
 import org.jxls.common.Context;
@@ -14,6 +15,8 @@ import org.jxls.util.JxlsHelper;
 import org.jxls.util.UtilWrapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import neu.Fields;
 
 
 /**
@@ -43,6 +46,7 @@ public class EachCommand extends AbstractCommand {
     private String multisheet;
     private String groupBy;
     private String groupOrder;
+    private String fields;
 
     private UtilWrapper util = new UtilWrapper();
 
@@ -253,13 +257,18 @@ public class EachCommand extends AbstractCommand {
             logger.warn("Failed to evaluate collection expression {}", items, e);
             itemsCollection = Collections.emptyList();
         }
+        Size size;
         if (groupBy == null || groupBy.length() == 0) {
-            return processCollection(context, itemsCollection, cellRef, var);
+            size = processCollection(context, itemsCollection, cellRef, var);
         } else {
             Collection<GroupData> groupedData = util.groupCollection(itemsCollection, groupBy, groupOrder);
             String groupVar = var != null ? var : GROUP_DATA_KEY;
-            return processCollection(context, groupedData, cellRef, groupVar);
+            size = processCollection(context, groupedData, cellRef, groupVar);
         }
+        if (fields != null && !fields.trim().isEmpty()) {
+        	getTransformer().adjustTableSize(cellRef, size);
+        }
+        return size;
     }
 
     private Size processCollection(Context context, Collection itemsCollection, CellRef cellRef, String varName) {
@@ -285,6 +294,9 @@ public class EachCommand extends AbstractCommand {
                 context.removeVar(varName);
                 continue;
             }
+			if (fields != null && !fields.trim().isEmpty()) {
+				context.putVar(Fields.NAME, new Fields(varName, fields));
+			}
             Size size = area.applyAt(currentCell, context);
             index++;
             if (cellRefGenerator != null) {
@@ -302,6 +314,7 @@ public class EachCommand extends AbstractCommand {
                 newWidth += size.getWidth();
                 newHeight = Math.max(newHeight, size.getHeight());
             }
+            context.removeVar(Fields.NAME);
         }
         if(currentVarObject != null){
             context.putVar(varName, currentVarObject);
@@ -319,4 +332,11 @@ public class EachCommand extends AbstractCommand {
         }
     }
 
+	public String getFields() {
+		return fields;
+	}
+
+	public void setFields(String fields) {
+		this.fields = fields;
+	}
 }
